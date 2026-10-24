@@ -1,151 +1,135 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native"
+import { useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native';
+import Display from './Display';
+import Teclado from './Teclado';
+import { calcular } from './calcular';
 
-function App(){
+const OPERADORES = ['+', '-', 'x', '/'];
+
+function App() {
+  const [expressao, setExpressao] = useState('');
+  const [historico, setHistorico] = useState([]);
+  const [memoria, setMemoria] = useState(0);
+  const [calculado, setCalculado] = useState(false); // true logo após apertar "="
+
+  // valor numérico atual da expressão (usado por RAIZ, M+ e M-)
+  function valorAtual() {
+    const v = calcular(expressao);
+    return typeof v === 'number' ? v : 0;
+  }
+
+  function mostrar(valor) {
+    setExpressao(String(valor));
+    setCalculado(true);
+  }
+
+  function aoTocar(tecla) {
+    if (tecla === 'AC' || tecla === 'Off') {
+      setExpressao('');
+      setCalculado(false);
+    } else if (tecla === 'C') {
+      setExpressao(expressao === 'Erro' ? '' : expressao.slice(0, -1));
+      setCalculado(false);
+    } else if (tecla === '=') {
+      aoIgual();
+    } else if (tecla === '+/-') {
+      // inverte o sinal do último número
+      const m = expressao.match(/^(.*?)(-?)(\d+\.?\d*|\.\d+)$/);
+      if (m) {
+        const [, antes, sinal, num] = m;
+        setExpressao(antes + (sinal ? '' : '-') + num);
+      }
+    } else if (tecla === '%') {
+      const m = expressao.match(/^(.*?)(\d+\.?\d*|\.\d+)$/);
+      if (m) {
+        setExpressao(m[1] + String(Number(m[2]) / 100));
+      }
+    } else if (tecla === 'RAIZ') {
+      const v = valorAtual();
+      mostrar(v < 0 ? 'Erro' : Number(Math.sqrt(v).toFixed(10)));
+    } else if (tecla === 'M+') {
+      setMemoria(memoria + valorAtual());
+    } else if (tecla === 'M-') {
+      setMemoria(memoria - valorAtual());
+    } else if (tecla === 'MRC') {
+      // 1º toque: mostra a memória; 2º toque seguido (já mostrando): zera
+      if (expressao === String(memoria) && memoria !== 0) {
+        setMemoria(0);
+        setExpressao('');
+      } else {
+        setExpressao(String(memoria));
+      }
+      setCalculado(true);
+    } else if (OPERADORES.includes(tecla)) {
+      if (expressao === 'Erro') return;
+      if (expressao === '' && tecla !== '-') return; // não começa com + x /
+      const ultimo = expressao.slice(-1);
+      if (OPERADORES.includes(ultimo) && expressao.length > 1) {
+        setExpressao(expressao.slice(0, -1) + tecla); // troca o operador
+      } else if (!OPERADORES.includes(ultimo) || expressao === '') {
+        setExpressao(expressao + tecla);
+      }
+      setCalculado(false); // continua a conta a partir do resultado
+    } else {
+      // dígito ou ponto
+      if (calculado || expressao === 'Erro') {
+        setExpressao(tecla === '.' ? '0.' : tecla); // começa conta nova
+      } else {
+        setExpressao(expressao + tecla);
+      }
+      setCalculado(false);
+    }
+  }
+
+  function aoIgual() {
+    if (expressao === '' || expressao === 'Erro') return;
+    const valor = String(calcular(expressao));
+    const item = {
+      id: Date.now().toString(),
+      conta: expressao,
+      resultado: valor,
+    };
+    setHistorico([item, ...historico]); // array novo, sem push
+    setExpressao(valor);
+    setCalculado(true);
+  }
+
   return (
-
     <View style={styles.container}>
-
-      <StatusBar style = "auto" />
+      <StatusBar style="auto" />
 
       <Text style={styles.titulo}> Calculadora SocialTech </Text>
 
-      <Text style={styles.painel}>
-        0
-      </Text>
+      <Display expressao={expressao} />
 
-      <View style={styles.colunas}>
+      <Teclado onPress={aoTocar} />
 
-        <TouchableOpacity style={styles.botao}>
-          <Text style={styles.textoBotao}>MRC</Text>
+      <View style={styles.cabecalho}>
+        <Text style={styles.subtitulo}>Histórico</Text>
+        <TouchableOpacity onPress={() => setHistorico([])}>
+          <Text style={styles.limpar}>Limpar histórico</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botao}>
-          <Text style={styles.textoBotao}>M-</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botao}>
-          <Text style={styles.textoBotao}>M+</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botao}>
-          <Text style={styles.textoBotao}>RAIZ</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botao}>
-          <Text style={styles.textoBotao}>Off</Text>
-        </TouchableOpacity>
-
       </View>
 
-      <View style={styles.colunas}>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>AC</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>C</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>+/-</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>%</Text>
-        </TouchableOpacity>
-
-      </View>
-
-      <View style={styles.colunas}>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>7</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>8</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>9</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>/</Text>
-        </TouchableOpacity>
-
-      </View>
-
-      <View style={styles.colunas}>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>4</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>5</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>6</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>x</Text>
-        </TouchableOpacity>
-
-      </View>
-
-      <View style={styles.colunas}>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>1</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>2</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>3</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>-</Text>
-        </TouchableOpacity>
-
-      </View>
-
-      <View style={styles.colunas}>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>0</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>.</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>=</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.botaoNumero}>
-          <Text style={styles.textoNumeros}>+</Text>
-        </TouchableOpacity>
-
-      </View>
-
+      <FlatList
+        style={styles.lista}
+        data={historico}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <Text style={styles.linha}>
+            {item.conta} = {item.resultado}
+          </Text>
+        )}
+        ListEmptyComponent={<Text style={styles.vazio}>Nenhuma conta ainda</Text>}
+      />
     </View>
-  )
+  );
 }
 
 export default App;
 
 const styles = StyleSheet.create({
-
   container: {
     flex: 1,
     backgroundColor: '#fff0f5',
@@ -165,58 +149,15 @@ const styles = StyleSheet.create({
     width: '100%'
   },
 
-  painel: {
-    width: '100%',
-    textAlign: 'right',
-    fontSize: 36,
-    fontWeight: 'bold',
-    backgroundColor: '#ffd6e8',
-    borderColor: 'black',
-    padding: 10,
-    marginBottom: 20
-  },
-
-  colunas: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  cabecalho: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     width: '95%',
-    gap: 6
+    marginTop: 10
   },
-
-  botao: {
-    backgroundColor: '#f8bbd0',
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#d6336c',
-    height: 55,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    width:'18%'
-  },
-
-  botaoNumero: {
-    backgroundColor: '#f48fb1',
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#d6336c',
-    height: 65,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    width:'22%'
-  },
-
-  textoBotao: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    textAlign: 'center'
-  },
-
-  textoNumeros: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center'
-  }
-})
+  subtitulo: { fontSize: 18, fontWeight: 'bold', color: '#d6336c' },
+  limpar: { fontSize: 14, color: '#d6336c', textDecorationLine: 'underline' },
+  lista: { width: '95%' },
+  linha: { fontSize: 20, padding: 6 },
+  vazio: { fontSize: 16, color: '#666', padding: 6 }
+});
