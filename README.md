@@ -19,30 +19,12 @@ O objetivo da atividade foi praticar o posicionamento de componentes em telas mo
 - React Navigation (native stack)
 - AsyncStorage
 
-## Como executar
+## Evoluções
 
-```bash
-npm install
-npx expo start
-```
-
-Escaneie o QR Code com o Expo Go.
-
-## Estrutura
-
-```
-App.js
-src/
-  components/  Botao.js, Display.js, Teclado.js
-  screens/     HomeScreen.js, HistoricoScreen.js
-  storage/     historico.js
-  utils/       calcular.js
-```
-
-## Funcionalidades
-
-- Calculadora com memória (MRC, M+, M-), RAIZ, %, +/-, AC, C e Off, feita com os componentes Botao, Display e Teclado.
-- Histórico das contas salvo com AsyncStorage (continua depois de fechar o app).
+- Histórico das contas salvo no aparelho e exibido em uma segunda tela.
+- **Evolução 1:** botão "Limpar histórico".
+- **Evolução 2:** botão "Excluir" para apagar uma conta específica.
+- **Evolução 3:** tocar numa conta do histórico leva o resultado de volta para a calculadora.
 - Segunda tela **Histórico**, aberta pela calculadora com React Navigation e listada com FlatList.
 
 ## Evoluções
