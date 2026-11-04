@@ -18,13 +18,6 @@ O objetivo da atividade foi praticar o posicionamento de componentes em telas mo
 - JavaScript
 - React Navigation (native stack)
 - AsyncStorage
-
-## Evoluções
-
-- Histórico das contas salvo no aparelho e exibido em uma segunda tela.
-- **Evolução 1:** botão "Limpar histórico".
-- **Evolução 2:** botão "Excluir" para apagar uma conta específica.
-- **Evolução 3:** tocar numa conta do histórico leva o resultado de volta para a calculadora.
 - Segunda tela **Histórico**, aberta pela calculadora com React Navigation e listada com FlatList.
 
 ## Evoluções
